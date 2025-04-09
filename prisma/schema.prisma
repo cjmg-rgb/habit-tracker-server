@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  password    String
+  profile     Profile?  
+  createdAt   DateTime  @default(now())
+}
+
+model Profile {
+  id          Int       @id @default(autoincrement())
+  firstName   String    @db.VarChar(255)
+  lastName    String    @db.VarChar(255)
+  gender      Gender
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int       @unique
+  userStats   UserStats? @relation("UserStats")
+  habits      Habit[]
+  habitLogs   HabitLog[]
+  notifications Notification[]
+  groupsOwned Group[]
+  groups      GroupMember[] @relation("GroupMembers")
+}
+
+model UserStats {
+  id          Int       @id @default(autoincrement())
+  totalHabits Int       @default(0)
+  totalGroups Int       @default(0)
+  user        Profile   @relation("UserStats", fields: [userId], references: [id])
+  userId      Int       @unique
+
+}
+
+model Habit {
+  id          Int       @id @default(autoincrement())
+  frequency   Frequency 
+  lastCompleted DateTime
+  streak      Int
+  isActive    Boolean   @default(true)
+  title       String    @db.VarChar(255)
+  description String    @db.VarChar(255)
+  habitLog    HabitLog[]
+  user        Profile      @relation(fields: [userId], references: [id])
+  userId      Int      
+  createdAt   DateTime  @default(now())
+}
+
+model HabitLog {
+  id        Int     @id @default(autoincrement())
+  habit     Habit   @relation(fields: [habitId], references: [id])
+  habitId   Int     
+  user      Profile    @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt   DateTime  @default(now())
+
+}
+
+model Notification {
+  id        Int     @id @default(autoincrement())
+  target    Profile    @relation(fields: [targetId], references: [id])
+  targetId  Int    
+  title     String
+  body      String
+  isRead    Boolean @default(false)
+  createdAt DateTime  @default(now())
+
+}
+
+model Group {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(255)
+  members   GroupMember[]
+  owner     Profile @relation(fields: [ownerId], references: [id])
+  ownerId   Int        
+  createdAt DateTime  @default(now())
+
+}
+
+model GroupMember {
+  id        Int     @id @default(autoincrement())
+  group     Group   @relation(fields: [groupId], references: [id])
+  groupId   Int
+  member    Profile @relation("GroupMembers",fields: [memberId], references: [id])
+  memberId  Int
+  createdAt DateTime  @default(now())
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
