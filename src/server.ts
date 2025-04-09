@@ -3,6 +3,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
 
+import userRoutes from "./routes/User.routes";
+import habitRoutes from "./routes/Habit.routes";
+import authRoutes from "./routes/Auth.routes";
+
 // INIT
 dotenv.config();
 const app = express();
@@ -17,6 +21,9 @@ app.use(morgan("dev"));
 app.get("/", (req, res) => {
   res.send("<h1>Hello World</h1>");
 });
+app.use("/api/users", userRoutes);
+app.use("/api/habits", habitRoutes);
+app.use("/api/auth", authRoutes);
 
 // Connection
 app.listen(PORT, () => {

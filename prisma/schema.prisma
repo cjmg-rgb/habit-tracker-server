@@ -26,8 +26,9 @@ model Profile {
   id          Int       @id @default(autoincrement())
   firstName   String    @db.VarChar(255)
   lastName    String    @db.VarChar(255)
+  role        Role      @default(USER)
   gender      Gender
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int       @unique
   userStats   UserStats? @relation("UserStats")
   habits      Habit[]
@@ -41,21 +42,21 @@ model UserStats {
   id          Int       @id @default(autoincrement())
   totalHabits Int       @default(0)
   totalGroups Int       @default(0)
-  user        Profile   @relation("UserStats", fields: [userId], references: [id])
+  user        Profile   @relation("UserStats", fields: [userId], references: [id], onDelete: Cascade)
   userId      Int       @unique
 
 }
 
 model Habit {
   id          Int       @id @default(autoincrement())
-  frequency   Frequency 
-  lastCompleted DateTime
-  streak      Int
+  frequency   Frequency @default(DAILY)
+  lastCompleted DateTime @default(now())
+  streak      Int       @default(0)
   isActive    Boolean   @default(true)
   title       String    @db.VarChar(255)
   description String    @db.VarChar(255)
   habitLog    HabitLog[]
-  user        Profile      @relation(fields: [userId], references: [id])
+  user        Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      Int      
   createdAt   DateTime  @default(now())
 }
@@ -64,7 +65,7 @@ model HabitLog {
   id        Int     @id @default(autoincrement())
   habit     Habit   @relation(fields: [habitId], references: [id])
   habitId   Int     
-  user      Profile    @relation(fields: [userId], references: [id])
+  user      Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   createdAt   DateTime  @default(now())
 
@@ -72,7 +73,7 @@ model HabitLog {
 
 model Notification {
   id        Int     @id @default(autoincrement())
-  target    Profile    @relation(fields: [targetId], references: [id])
+  target    Profile    @relation(fields: [targetId], references: [id], onDelete: Cascade)
   targetId  Int    
   title     String
   body      String
@@ -85,8 +86,8 @@ model Group {
   id        Int     @id @default(autoincrement())
   name      String  @db.VarChar(255)
   members   GroupMember[]
-  owner     Profile @relation(fields: [ownerId], references: [id])
-  ownerId   Int        
+  owner     Profile? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId   Int?
   createdAt DateTime  @default(now())
 
 }
@@ -95,8 +96,8 @@ model GroupMember {
   id        Int     @id @default(autoincrement())
   group     Group   @relation(fields: [groupId], references: [id])
   groupId   Int
-  member    Profile @relation("GroupMembers",fields: [memberId], references: [id])
-  memberId  Int
+  member    Profile? @relation("GroupMembers",fields: [memberId], references: [id], onDelete: SetNull)
+  memberId  Int?
   createdAt DateTime  @default(now())
 }
 
@@ -109,4 +110,9 @@ enum Frequency {
 enum Gender {
   MALE
   FEMALE
+}
+
+enum Role {
+  ADMIN
+  USER
 }
